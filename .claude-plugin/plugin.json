@@ -1,0 +1,11 @@
+{
+  "name": "exchange",
+  "description": "Exchange channel plugin for Claude Code — real-time inbound messaging via The Exchange message broker.",
+  "version": "0.2.0",
+  "keywords": [
+    "exchange",
+    "channel",
+    "agent",
+    "mcp"
+  ]
+}
