@@ -1,0 +1,12 @@
+{
+  "exchange-tools": {
+    "marketplace": "agiterra",
+    "source": "agiterra/claude-marketplace",
+    "version": ">=0.1.0"
+  },
+  "exchange-ipc-tools": {
+    "marketplace": "agiterra",
+    "source": "agiterra/claude-marketplace",
+    "version": ">=0.1.0"
+  }
+}
