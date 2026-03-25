@@ -3,10 +3,5 @@
     "marketplace": "agiterra",
     "source": "agiterra/claude-marketplace",
     "version": ">=0.1.0"
-  },
-  "wire-ipc-tools": {
-    "marketplace": "agiterra",
-    "source": "agiterra/claude-marketplace",
-    "version": ">=0.1.0"
   }
 }

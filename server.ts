@@ -16,9 +16,9 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   WireConnection,
+  createWebhookChannelHandler,
   type DeliveryPayload,
 } from "@agiterra/wire-tools";
-import { createIpcChannelHandler } from "@agiterra/wire-ipc-tools";
 
 const WIRE_URL = process.env.WIRE_URL ?? "http://localhost:9800";
 const AGENT_ID =
@@ -91,8 +91,8 @@ async function main(): Promise<void> {
     onError: (e) => console.error(`[wire] error: ${e}`),
   });
 
-  // Register IPC channel handler
-  conn.registerChannel("ipc", createIpcChannelHandler());
+  // Register webhook envelope handler for IPC topic
+  conn.registerChannel("ipc", createWebhookChannelHandler());
 
   await conn.start();
 
