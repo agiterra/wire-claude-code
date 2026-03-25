@@ -1,7 +1,7 @@
 {
   "name": "wire",
   "description": "Wire channel plugin for Claude Code — real-time inbound messaging via The Wire message broker.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "keywords": [
     "wire",
     "channel",
