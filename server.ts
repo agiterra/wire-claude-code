@@ -12,6 +12,8 @@
  *   WIRE_AGENT_NAME     display name
  */
 
+import { writeFileSync, mkdirSync, unlinkSync } from "fs";
+import { join } from "path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -81,12 +83,27 @@ async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await mcp.connect(transport);
 
+  // Session file: lets the SessionEnd hook disconnect this specific session
+  const sessionDir = join(process.env.HOME ?? "/tmp", ".wire", "sessions");
+  const sessionFile = join(sessionDir, `${AGENT_ID}.${process.pid}.json`);
+  mkdirSync(sessionDir, { recursive: true });
+
   const conn = new WireConnection({
     url: WIRE_URL,
     agentId: AGENT_ID,
     agentName: AGENT_NAME,
     deliver,
-    onConnect: () => console.error("[wire] connected"),
+    onConnect: (sessionId) => {
+      console.error(`[wire] connected session=${sessionId}`);
+      try {
+        writeFileSync(sessionFile, JSON.stringify({
+          agentId: AGENT_ID,
+          sessionId,
+          url: WIRE_URL,
+          pid: process.pid,
+        }));
+      } catch {}
+    },
     onDisconnect: () => console.error("[wire] disconnected, reconnecting..."),
     onError: (e) => console.error(`[wire] error: ${e}`),
   });
@@ -97,6 +114,7 @@ async function main(): Promise<void> {
   await conn.start();
 
   const cleanup = async () => {
+    try { unlinkSync(sessionFile); } catch {}
     await conn.stop();
     process.exit(0);
   };
