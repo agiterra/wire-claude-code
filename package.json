@@ -1,5 +1,5 @@
 {
-  "name": "@agiterra/exchange-claude-code",
+  "name": "@agiterra/wire-claude-code",
   "version": "0.2.0",
   "license": "Apache-2.0",
   "type": "module",
@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@agiterra/exchange-tools": "file:../exchange-tools",
-    "@agiterra/exchange-ipc-tools": "file:../exchange-ipc-tools"
+    "@agiterra/wire-tools": "file:../wire-tools",
+    "@agiterra/wire-ipc-tools": "file:../wire-ipc-tools"
   },
   "devDependencies": {
     "@types/bun": "^1.3.10"

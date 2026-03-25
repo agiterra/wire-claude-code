@@ -1,9 +1,9 @@
 {
-  "name": "exchange",
-  "description": "Exchange channel plugin for Claude Code — real-time inbound messaging via The Exchange message broker.",
+  "name": "wire",
+  "description": "Wire channel plugin for Claude Code — real-time inbound messaging via The Wire message broker.",
   "version": "0.2.0",
   "keywords": [
-    "exchange",
+    "wire",
     "channel",
     "agent",
     "mcp"
