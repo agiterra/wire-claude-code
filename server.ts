@@ -19,8 +19,11 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   WireConnection,
   createWebhookChannelHandler,
+  createLogger,
   type DeliveryPayload,
 } from "@agiterra/wire-tools";
+
+const log = createLogger("wire-cc", 2); // stderr — stdout is MCP transport
 
 const WIRE_URL = process.env.WIRE_URL ?? "http://localhost:9800";
 const AGENT_ID =
@@ -55,7 +58,6 @@ async function deliver(payload: DeliveryPayload): Promise<void> {
 
   const content = `[${source} via Wire] ${channel.text}`;
 
-  const debugLog = join(process.env.HOME ?? "/tmp", ".wire", "channel-debug.log");
   try {
     const notification = {
       method: "notifications/claude/channel" as const,
@@ -73,13 +75,11 @@ async function deliver(payload: DeliveryPayload): Promise<void> {
         },
       },
     };
-    writeFileSync(debugLog, `${new Date().toISOString()} SENDING seq=${raw.seq} from=${source}\n${JSON.stringify(notification, null, 2)}\n`, { flag: "a" });
+    log.debug({ event: "deliver_sending", seq: raw.seq, source }, "sending notification");
     await mcp.notification(notification);
-    writeFileSync(debugLog, `${new Date().toISOString()} SENT OK seq=${raw.seq}\n\n`, { flag: "a" });
-    console.error(`[wire] delivered seq=${raw.seq} from=${source}`);
+    log.info({ event: "deliver_ok", seq: raw.seq, source }, "delivered");
   } catch (e) {
-    writeFileSync(debugLog, `${new Date().toISOString()} FAILED seq=${raw.seq}: ${e}\n\n`, { flag: "a" });
-    console.error(`[wire] notification failed seq=${raw.seq}: ${e}`);
+    log.error({ event: "deliver_failed", seq: raw.seq, source, err: e }, "notification failed");
   }
 }
 
@@ -102,7 +102,7 @@ async function main(): Promise<void> {
     ccSessionId: CC_SESSION_ID,
     deliver,
     onConnect: (sessionId) => {
-      console.error(`[wire] connected sse=${sessionId} cc_session=${CC_SESSION_ID}`);
+      log.info({ event: "connected", sseSession: sessionId, ccSession: CC_SESSION_ID }, "connected");
       try {
         writeFileSync(sessionFile, JSON.stringify({
           agentId: AGENT_ID,
@@ -112,11 +112,11 @@ async function main(): Promise<void> {
           pid: process.pid,
         }));
       } catch (e) {
-        console.error(`[wire] failed to write session file ${sessionFile}:`, e);
+        log.error({ event: "session_file_write_failed", path: sessionFile, err: e }, "failed to write session file");
       }
     },
-    onDisconnect: () => console.error("[wire] disconnected, reconnecting..."),
-    onError: (e) => console.error(`[wire] error: ${e}`),
+    onDisconnect: () => log.warn({ event: "disconnected" }, "disconnected, reconnecting..."),
+    onError: (e) => log.error({ event: "error", err: e }, "wire error"),
   });
 
   // Register webhook envelope handler for IPC topic
@@ -136,6 +136,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((e) => {
-  console.error("[wire] fatal:", e);
+  log.fatal({ event: "fatal", err: e }, "fatal error");
   process.exit(1);
 });

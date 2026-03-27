@@ -1,6 +1,6 @@
 {
   "name": "@agiterra/wire-claude-code",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "license": "Apache-2.0",
   "type": "module",
   "bin": "./server.ts",
@@ -8,7 +8,7 @@
     "start": "bun install --no-summary && bun server.ts"
   },
   "dependencies": {
-    "@agiterra/wire-tools": "agiterra/wire-tools#v0.6.0",
+    "@agiterra/wire-tools": "agiterra/wire-tools#v0.7.0",
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
