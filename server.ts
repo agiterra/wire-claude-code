@@ -56,7 +56,7 @@ async function deliver(payload: DeliveryPayload): Promise<void> {
   const { raw, channel } = payload;
   const source = (channel.metadata.source as string) ?? raw.source;
 
-  const content = `[${source} via Wire] ${channel.text}`;
+  const content = channel.text;
 
   try {
     const notification = {
