@@ -26,6 +26,8 @@ const WIRE_URL = process.env.WIRE_URL ?? "http://localhost:9800";
 const AGENT_ID =
   process.env.WIRE_AGENT_ID ?? `claude-${crypto.randomUUID().slice(0, 8)}`;
 const AGENT_NAME = process.env.WIRE_AGENT_NAME ?? AGENT_ID;
+// Context ID identifies this Claude Code session (survives SSE reconnects)
+const CC_SESSION_ID = crypto.randomUUID();
 
 // --- MCP server ---
 
@@ -53,9 +55,10 @@ async function deliver(payload: DeliveryPayload): Promise<void> {
 
   const content = `[${source} via Wire] ${channel.text}`;
 
+  const debugLog = join(process.env.HOME ?? "/tmp", ".wire", "channel-debug.log");
   try {
-    await mcp.notification({
-      method: "notifications/claude/channel",
+    const notification = {
+      method: "notifications/claude/channel" as const,
       params: {
         content,
         meta: {
@@ -63,15 +66,19 @@ async function deliver(payload: DeliveryPayload): Promise<void> {
           message_id: String(raw.seq),
           user: source,
           ts: new Date(raw.created_at).toISOString(),
-          seq: raw.seq,
-          source: raw.source,
-          topic: raw.topic,
-          created_at: raw.created_at,
+          seq: String(raw.seq),
+          source: String(raw.source),
+          topic: String(raw.topic),
+          created_at: String(raw.created_at),
         },
       },
-    });
+    };
+    writeFileSync(debugLog, `${new Date().toISOString()} SENDING seq=${raw.seq} from=${source}\n${JSON.stringify(notification, null, 2)}\n`, { flag: "a" });
+    await mcp.notification(notification);
+    writeFileSync(debugLog, `${new Date().toISOString()} SENT OK seq=${raw.seq}\n\n`, { flag: "a" });
     console.error(`[wire] delivered seq=${raw.seq} from=${source}`);
   } catch (e) {
+    writeFileSync(debugLog, `${new Date().toISOString()} FAILED seq=${raw.seq}: ${e}\n\n`, { flag: "a" });
     console.error(`[wire] notification failed seq=${raw.seq}: ${e}`);
   }
 }
@@ -92,17 +99,21 @@ async function main(): Promise<void> {
     url: WIRE_URL,
     agentId: AGENT_ID,
     agentName: AGENT_NAME,
+    ccSessionId: CC_SESSION_ID,
     deliver,
     onConnect: (sessionId) => {
-      console.error(`[wire] connected session=${sessionId}`);
+      console.error(`[wire] connected sse=${sessionId} cc_session=${CC_SESSION_ID}`);
       try {
         writeFileSync(sessionFile, JSON.stringify({
           agentId: AGENT_ID,
           sessionId,
+          ccSessionId: CC_SESSION_ID,
           url: WIRE_URL,
           pid: process.pid,
         }));
-      } catch {}
+      } catch (e) {
+        console.error(`[wire] failed to write session file ${sessionFile}:`, e);
+      }
     },
     onDisconnect: () => console.error("[wire] disconnected, reconnecting..."),
     onError: (e) => console.error(`[wire] error: ${e}`),
