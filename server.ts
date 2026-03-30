@@ -33,11 +33,11 @@ import {
 const log = createLogger("wire-cc", 2); // stderr — stdout is MCP transport
 
 const WIRE_URL = process.env.WIRE_URL ?? "http://localhost:9800";
-// _PANE_AGENT_ID is set by pane launch and takes priority over .env's WIRE_AGENT_ID
+// PANE_AGENT_ID is set by pane launch and takes priority over .env's WIRE_AGENT_ID
 const AGENT_ID =
-  process.env._PANE_AGENT_ID ?? process.env.WIRE_AGENT_ID ?? `claude-${crypto.randomUUID().slice(0, 8)}`;
+  process.env.PANE_AGENT_ID ?? process.env.WIRE_AGENT_ID ?? `claude-${crypto.randomUUID().slice(0, 8)}`;
 const AGENT_NAME =
-  process.env._PANE_AGENT_NAME ?? process.env.WIRE_AGENT_NAME ?? AGENT_ID;
+  process.env.PANE_AGENT_NAME ?? process.env.WIRE_AGENT_NAME ?? AGENT_ID;
 // Context ID identifies this Claude Code session (survives SSE reconnects)
 const CC_SESSION_ID = crypto.randomUUID();
 
@@ -165,6 +165,7 @@ async function main(): Promise<void> {
           ccSessionId: CC_SESSION_ID,
           url: WIRE_URL,
           pid: process.pid,
+          ccPid: process.ppid,
         }));
       } catch (e) {
         log.error({ event: "session_file_write_failed", path: sessionFile, err: e }, "failed to write session file");
@@ -188,6 +189,15 @@ async function main(): Promise<void> {
   process.on("SIGINT", cleanup);
   process.stdin.on("end", cleanup);
   process.stdin.on("close", cleanup);
+
+  // Orphan detection: if Claude Code dies, we get reparented to PID 1
+  const parentPid = process.ppid;
+  setInterval(() => {
+    if (process.ppid !== parentPid) {
+      log.info({ event: "orphaned", parentPid, newPpid: process.ppid }, "parent died, exiting");
+      cleanup();
+    }
+  }, 5000);
 }
 
 main().catch((e) => {
