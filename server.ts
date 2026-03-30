@@ -33,9 +33,11 @@ import {
 const log = createLogger("wire-cc", 2); // stderr — stdout is MCP transport
 
 const WIRE_URL = process.env.WIRE_URL ?? "http://localhost:9800";
+// _PANE_AGENT_ID is set by pane launch and takes priority over .env's WIRE_AGENT_ID
 const AGENT_ID =
-  process.env.WIRE_AGENT_ID ?? `claude-${crypto.randomUUID().slice(0, 8)}`;
-const AGENT_NAME = process.env.WIRE_AGENT_NAME ?? AGENT_ID;
+  process.env._PANE_AGENT_ID ?? process.env.WIRE_AGENT_ID ?? `claude-${crypto.randomUUID().slice(0, 8)}`;
+const AGENT_NAME =
+  process.env._PANE_AGENT_NAME ?? process.env.WIRE_AGENT_NAME ?? AGENT_ID;
 // Context ID identifies this Claude Code session (survives SSE reconnects)
 const CC_SESSION_ID = crypto.randomUUID();
 
