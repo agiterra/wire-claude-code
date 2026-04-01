@@ -138,13 +138,18 @@ async function deliver(payload: DeliveryPayload): Promise<void> {
 // --- Main ---
 
 async function main(): Promise<void> {
-  // Load agent keys — check project-local .wire/keys/ first, then ~/.wire/keys/
-  // Agents don't create keys — the orchestrator (pane) persists them at launch
-  const { existsSync } = await import("fs");
-  const localKeyDir = join(process.cwd(), ".wire", "keys");
-  const localKeyPath = join(localKeyDir, `${AGENT_ID}.key`);
-  if (existsSync(localKeyPath)) {
-    keyPair = await loadOrCreateKey(AGENT_ID, localKeyDir);
+  // Load agent key from WIRE_PRIVATE_KEY env var (base64 PKCS8).
+  // The orchestrator is responsible for providing this — via .env, pane launch, etc.
+  // Falls back to ~/.wire/keys/ for backwards compatibility with persistent agents.
+  const rawKey = process.env.WIRE_PRIVATE_KEY;
+  if (rawKey) {
+    const pkcs8 = Uint8Array.from(atob(rawKey), (c) => c.charCodeAt(0));
+    const privateKey = await crypto.subtle.importKey("pkcs8", pkcs8, "Ed25519", true, ["sign"]);
+    const jwk = await crypto.subtle.exportKey("jwk", privateKey);
+    const pubB64Url = jwk.x!;
+    const pubB64 = pubB64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const publicKey = pubB64 + "=".repeat((4 - (pubB64.length % 4)) % 4);
+    keyPair = { publicKey, privateKey };
   } else {
     keyPair = await loadOrCreateKey(AGENT_ID);
   }
