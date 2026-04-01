@@ -24,7 +24,6 @@ import {
   WireConnection,
   createWebhookChannelHandler,
   createLogger,
-  loadOrCreateKey,
   setPlan,
   type DeliveryPayload,
   type KeyPair,
@@ -140,9 +139,10 @@ async function deliver(payload: DeliveryPayload): Promise<void> {
 async function main(): Promise<void> {
   // Load agent key from WIRE_PRIVATE_KEY env var (base64 PKCS8).
   // The orchestrator is responsible for providing this — via .env, pane launch, etc.
-  // Falls back to ~/.wire/keys/ for backwards compatibility with persistent agents.
   const rawKey = process.env.WIRE_PRIVATE_KEY;
-  if (rawKey) {
+  if (!rawKey) {
+    log.error({ event: "no_private_key" }, "WIRE_PRIVATE_KEY not set — Wire features disabled");
+  } else {
     const pkcs8 = Uint8Array.from(atob(rawKey), (c) => c.charCodeAt(0));
     const privateKey = await crypto.subtle.importKey("pkcs8", pkcs8, "Ed25519", true, ["sign"]);
     const jwk = await crypto.subtle.exportKey("jwk", privateKey);
@@ -150,8 +150,6 @@ async function main(): Promise<void> {
     const pubB64 = pubB64Url.replace(/-/g, "+").replace(/_/g, "/");
     const publicKey = pubB64 + "=".repeat((4 - (pubB64.length % 4)) % 4);
     keyPair = { publicKey, privateKey };
-  } else {
-    keyPair = await loadOrCreateKey(AGENT_ID);
   }
 
   // Connect MCP first so notifications work when SSE backlog arrives
