@@ -138,8 +138,16 @@ async function deliver(payload: DeliveryPayload): Promise<void> {
 // --- Main ---
 
 async function main(): Promise<void> {
-  // Load agent keys for signed operations
-  keyPair = await loadOrCreateKey(AGENT_ID);
+  // Load agent keys — check project-local .wire/keys/ first, then ~/.wire/keys/
+  // Agents don't create keys — the orchestrator (pane) persists them at launch
+  const { existsSync } = await import("fs");
+  const localKeyDir = join(process.cwd(), ".wire", "keys");
+  const localKeyPath = join(localKeyDir, `${AGENT_ID}.key`);
+  if (existsSync(localKeyPath)) {
+    keyPair = await loadOrCreateKey(AGENT_ID, localKeyDir);
+  } else {
+    keyPair = await loadOrCreateKey(AGENT_ID);
+  }
 
   // Connect MCP first so notifications work when SSE backlog arrives
   const transport = new StdioServerTransport();
