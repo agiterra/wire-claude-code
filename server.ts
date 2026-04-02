@@ -141,7 +141,8 @@ async function main(): Promise<void> {
   // via PANE_PRIVATE_KEY which takes precedence over .env's WIRE_PRIVATE_KEY.
   const rawKey = process.env.PANE_PRIVATE_KEY ?? process.env.WIRE_PRIVATE_KEY;
   if (!rawKey) {
-    log.error({ event: "no_private_key" }, "WIRE_PRIVATE_KEY not set — Wire features disabled");
+    log.error({ event: "no_private_key" }, "WIRE_PRIVATE_KEY not set — cannot connect to Wire");
+    process.exit(1);
   } else {
     const pkcs8 = Uint8Array.from(atob(rawKey), (c) => c.charCodeAt(0));
     const privateKey = await crypto.subtle.importKey("pkcs8", pkcs8, "Ed25519", true, ["sign"]);
@@ -166,7 +167,7 @@ async function main(): Promise<void> {
     agentId: AGENT_ID,
     agentName: AGENT_NAME,
     ccSessionId: CC_SESSION_ID,
-    keyPair: keyPair ?? undefined,
+    keyPair: keyPair!,
     deliver,
     onConnect: (sessionId) => {
       log.info({ event: "connected", sseSession: sessionId, ccSession: CC_SESSION_ID }, "connected");
