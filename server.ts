@@ -178,7 +178,7 @@ async function main(): Promise<void> {
           ccSessionId: CC_SESSION_ID,
           url: WIRE_URL,
           pid: process.pid,
-          ccPid: process.ppid,
+          ccPid: process.ppid > 1 ? process.ppid : null,
         }));
       } catch (e) {
         log.error({ event: "session_file_write_failed", path: sessionFile, err: e }, "failed to write session file");
