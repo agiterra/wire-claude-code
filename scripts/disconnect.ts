@@ -4,18 +4,27 @@
  * Called by SessionEnd hook — reads the session file written by the MCP server
  * and disconnects only that specific session.
  *
- * Env: WIRE_AGENT_ID
+ * Env: WIRE_AGENT_ID, WIRE_PRIVATE_KEY (or PANE_PRIVATE_KEY)
  */
 
 import { readFileSync, readdirSync, unlinkSync } from "fs";
 import { join } from "path";
-import { loadOrCreateKey, signBody } from "@agiterra/wire-tools/crypto";
+import { createAuthJwt } from "@agiterra/wire-tools/crypto";
 
 const agentId = process.env.WIRE_AGENT_ID;
 if (!agentId) {
   console.error("[wire] disconnect: no WIRE_AGENT_ID set");
   process.exit(0);
 }
+
+const rawKey = process.env.PANE_PRIVATE_KEY ?? process.env.WIRE_PRIVATE_KEY;
+if (!rawKey) {
+  console.error("[wire] disconnect: no private key in env");
+  process.exit(0);
+}
+
+const pkcs8 = Uint8Array.from(atob(rawKey), (c) => c.charCodeAt(0));
+const privateKey = await crypto.subtle.importKey("pkcs8", pkcs8, "Ed25519", true, ["sign"]);
 
 const sessionDir = join(process.env.HOME ?? "/tmp", ".wire", "sessions");
 
@@ -36,15 +45,14 @@ for (const file of files) {
 
     if (!sessionId || !url) continue;
 
-    const kp = await loadOrCreateKey(agentId);
-    const body = JSON.stringify({ agent_id: agentId, session_id: sessionId });
-    const sig = await signBody(kp.privateKey, body);
+    const body = JSON.stringify({ session_id: sessionId });
+    const token = await createAuthJwt(privateKey, agentId, body);
 
     const res = await fetch(`${url}/agents/disconnect`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Wire-Signature": sig,
+        Authorization: `Bearer ${token}`,
       },
       body,
       signal: AbortSignal.timeout(5000),

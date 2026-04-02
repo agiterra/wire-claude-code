@@ -37,8 +37,8 @@ const AGENT_ID =
   process.env.PANE_AGENT_ID ?? process.env.WIRE_AGENT_ID ?? `claude-${crypto.randomUUID().slice(0, 8)}`;
 const AGENT_NAME =
   process.env.PANE_AGENT_NAME ?? process.env.WIRE_AGENT_NAME ?? AGENT_ID;
-// Context ID identifies this Claude Code session (survives SSE reconnects)
-const CC_SESSION_ID = crypto.randomUUID();
+// Claude Code session ID — injected by SessionStart hook, persists across MCP reconnects
+const CC_SESSION_ID = process.env.CLAUDE_CODE_SESSION_ID ?? crypto.randomUUID();
 
 // --- MCP server ---
 
@@ -137,9 +137,9 @@ async function deliver(payload: DeliveryPayload): Promise<void> {
 // --- Main ---
 
 async function main(): Promise<void> {
-  // Load agent key from WIRE_PRIVATE_KEY env var (base64 PKCS8).
-  // The orchestrator is responsible for providing this — via .env, pane launch, etc.
-  const rawKey = process.env.WIRE_PRIVATE_KEY;
+  // Load agent key (base64 PKCS8). Pane-launched agents get their own key
+  // via PANE_PRIVATE_KEY which takes precedence over .env's WIRE_PRIVATE_KEY.
+  const rawKey = process.env.PANE_PRIVATE_KEY ?? process.env.WIRE_PRIVATE_KEY;
   if (!rawKey) {
     log.error({ event: "no_private_key" }, "WIRE_PRIVATE_KEY not set — Wire features disabled");
   } else {
@@ -166,6 +166,7 @@ async function main(): Promise<void> {
     agentId: AGENT_ID,
     agentName: AGENT_NAME,
     ccSessionId: CC_SESSION_ID,
+    keyPair: keyPair ?? undefined,
     deliver,
     onConnect: (sessionId) => {
       log.info({ event: "connected", sseSession: sessionId, ccSession: CC_SESSION_ID }, "connected");

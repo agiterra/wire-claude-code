@@ -1,5 +1,15 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"export CLAUDE_CODE_SESSION_ID=$CLAUDE_CODE_SESSION_ID\" >> \"$CLAUDE_ENV_FILE\""
+          }
+        ]
+      }
+    ],
     "SessionEnd": [
       {
         "hooks": [
