@@ -32,11 +32,11 @@ import {
 const log = createLogger("wire-cc", 2); // stderr — stdout is MCP transport
 
 const WIRE_URL = process.env.WIRE_URL ?? "http://localhost:9800";
-// PANE_AGENT_ID is set by pane launch and takes priority over .env's WIRE_AGENT_ID
+// CREW_AGENT_ID is set by crew launch and takes priority over .env's WIRE_AGENT_ID
 const AGENT_ID =
-  process.env.PANE_AGENT_ID ?? process.env.WIRE_AGENT_ID ?? `claude-${crypto.randomUUID().slice(0, 8)}`;
+  process.env.CREW_AGENT_ID ?? process.env.WIRE_AGENT_ID ?? `claude-${crypto.randomUUID().slice(0, 8)}`;
 const AGENT_NAME =
-  process.env.PANE_AGENT_NAME ?? process.env.WIRE_AGENT_NAME ?? AGENT_ID;
+  process.env.CREW_AGENT_NAME ?? process.env.WIRE_AGENT_NAME ?? AGENT_ID;
 // Claude Code session ID — injected by SessionStart hook, persists across MCP reconnects
 const CC_SESSION_ID = process.env.CLAUDE_CODE_SESSION_ID ?? crypto.randomUUID();
 
@@ -137,11 +137,11 @@ async function deliver(payload: DeliveryPayload): Promise<void> {
 // --- Main ---
 
 async function main(): Promise<void> {
-  // Load agent key (base64 PKCS8). Pane-launched agents get their own key
-  // via PANE_PRIVATE_KEY which takes precedence over .env's WIRE_PRIVATE_KEY.
-  const rawKey = process.env.PANE_PRIVATE_KEY ?? process.env.WIRE_PRIVATE_KEY;
+  // Load agent key (base64 PKCS8). Crew-launched agents get their own key
+  // via CREW_PRIVATE_KEY which takes precedence over .env's WIRE_PRIVATE_KEY.
+  const rawKey = process.env.CREW_PRIVATE_KEY ?? process.env.WIRE_PRIVATE_KEY;
   if (!rawKey) {
-    log.error({ event: "no_private_key" }, "no WIRE_PRIVATE_KEY or PANE_PRIVATE_KEY — exiting");
+    log.error({ event: "no_private_key" }, "no WIRE_PRIVATE_KEY or CREW_PRIVATE_KEY — exiting");
     process.exit(1);
   } else {
     const pkcs8 = Uint8Array.from(atob(rawKey), (c) => c.charCodeAt(0));

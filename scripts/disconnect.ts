@@ -4,7 +4,7 @@
  * Called by SessionEnd hook — reads the session file written by the MCP server
  * and disconnects only that specific session.
  *
- * Env: WIRE_AGENT_ID, WIRE_PRIVATE_KEY (or PANE_PRIVATE_KEY)
+ * Env: WIRE_AGENT_ID, WIRE_PRIVATE_KEY (or CREW_PRIVATE_KEY)
  */
 
 import { readFileSync, readdirSync, unlinkSync } from "fs";
@@ -17,7 +17,7 @@ if (!agentId) {
   process.exit(0);
 }
 
-const rawKey = process.env.PANE_PRIVATE_KEY ?? process.env.WIRE_PRIVATE_KEY;
+const rawKey = process.env.CREW_PRIVATE_KEY ?? process.env.WIRE_PRIVATE_KEY;
 if (!rawKey) {
   console.error("[wire] disconnect: no private key in env");
   process.exit(0);
