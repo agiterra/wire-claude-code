@@ -141,7 +141,7 @@ async function main(): Promise<void> {
   // via PANE_PRIVATE_KEY which takes precedence over .env's WIRE_PRIVATE_KEY.
   const rawKey = process.env.PANE_PRIVATE_KEY ?? process.env.WIRE_PRIVATE_KEY;
   if (!rawKey) {
-    log.error({ event: "no_private_key" }, "WIRE_PRIVATE_KEY not set — cannot connect to Wire");
+    log.error({ event: "no_private_key" }, "no WIRE_PRIVATE_KEY or PANE_PRIVATE_KEY — exiting");
     process.exit(1);
   } else {
     const pkcs8 = Uint8Array.from(atob(rawKey), (c) => c.charCodeAt(0));
