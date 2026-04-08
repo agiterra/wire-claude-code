@@ -103,6 +103,11 @@ mcp.setRequestHandler(CallToolRequestSchema, async (req) => {
 
 // --- Delivery ---
 
+/** Strip webhook. prefix from topic so agents see the canonical topic name. */
+function canonicalTopic(topic: string): string {
+  return topic.startsWith("webhook.") ? topic.slice(8) : topic;
+}
+
 async function deliver(payload: DeliveryPayload): Promise<void> {
   const { raw, channel } = payload;
   const source = (channel.metadata.source as string) ?? raw.source;
@@ -121,7 +126,7 @@ async function deliver(payload: DeliveryPayload): Promise<void> {
           ts: new Date(raw.created_at).toISOString(),
           seq: String(raw.seq),
           source: String(raw.source),
-          topic: String(raw.topic),
+          topic: canonicalTopic(raw.topic),
           created_at: String(raw.created_at),
         },
       },
