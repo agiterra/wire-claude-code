@@ -7,5 +7,7 @@
     "channel",
     "agent",
     "mcp"
-  ]
+  ],
+  "postInstall": "bun install --frozen-lockfile",
+  "postUpdate": "bun install --frozen-lockfile"
 }
