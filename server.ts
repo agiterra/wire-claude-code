@@ -191,6 +191,11 @@ async function main(): Promise<void> {
   // Register webhook envelope handler for IPC topic
   conn.registerChannel("ipc", createWebhookChannelHandler());
 
+  // Brief delay before starting SSE — gives Claude Code time to fully
+  // initialize channel support after MCP handshake. Without this, replay
+  // messages during startup get acked but silently dropped by CC.
+  await new Promise((r) => setTimeout(r, 2000));
+
   await conn.start();
 
   const cleanup = async () => {
