@@ -79,6 +79,42 @@ mcp.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["plan"],
       },
     },
+    {
+      name: "heartbeat_create",
+      description:
+        "Create a scheduled heartbeat — a recurring prompt sent to an agent via Wire. " +
+        "Use this to wake yourself or an ephemeral agent up periodically to check on things.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          agent_id: { type: "string", description: "Agent to receive the heartbeat prompt. Defaults to self." },
+          cron: { type: "string", description: "Cron expression (e.g. '*/5 * * * *' for every 5 minutes)" },
+          prompt: { type: "string", description: "The prompt text sent to the agent on each tick" },
+        },
+        required: ["cron", "prompt"],
+      },
+    },
+    {
+      name: "heartbeat_delete",
+      description: "Delete a scheduled heartbeat by ID.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          id: { type: "string", description: "Heartbeat ID (from heartbeat_create or heartbeat_list)" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "heartbeat_list",
+      description: "List all scheduled heartbeats, optionally filtered by agent.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          agent_id: { type: "string", description: "Filter by agent ID. Omit to list all." },
+        },
+      },
+    },
   ],
 }));
 
@@ -98,6 +134,70 @@ mcp.setRequestHandler(CallToolRequestSchema, async (req) => {
       };
     }
   }
+
+  if (req.params.name === "heartbeat_create") {
+    const args = req.params.arguments as { agent_id?: string; cron: string; prompt: string };
+    const agentId = args.agent_id ?? AGENT_ID;
+    try {
+      const res = await fetch(`${WIRE_URL}/heartbeats`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agent_id: agentId,
+          cron: args.cron,
+          prompt: args.prompt,
+          created_by: AGENT_ID,
+        }),
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      const hb = await res.json();
+      return {
+        content: [{ type: "text" as const, text: `heartbeat created: ${JSON.stringify(hb, null, 2)}` }],
+      };
+    } catch (e: any) {
+      return {
+        content: [{ type: "text" as const, text: `heartbeat_create failed: ${e.message}` }],
+        isError: true,
+      };
+    }
+  }
+
+  if (req.params.name === "heartbeat_delete") {
+    const { id } = req.params.arguments as { id: string };
+    try {
+      const res = await fetch(`${WIRE_URL}/heartbeats/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      return {
+        content: [{ type: "text" as const, text: `heartbeat deleted: ${id}` }],
+      };
+    } catch (e: any) {
+      return {
+        content: [{ type: "text" as const, text: `heartbeat_delete failed: ${e.message}` }],
+        isError: true,
+      };
+    }
+  }
+
+  if (req.params.name === "heartbeat_list") {
+    const args = req.params.arguments as { agent_id?: string } | undefined;
+    try {
+      const url = args?.agent_id
+        ? `${WIRE_URL}/heartbeats?agent_id=${args.agent_id}`
+        : `${WIRE_URL}/heartbeats`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      const list = await res.json();
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(list, null, 2) }],
+      };
+    } catch (e: any) {
+      return {
+        content: [{ type: "text" as const, text: `heartbeat_list failed: ${e.message}` }],
+        isError: true,
+      };
+    }
+  }
+
   throw new Error(`unknown tool: ${req.params.name}`);
 });
 
