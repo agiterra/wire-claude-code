@@ -24,6 +24,7 @@ import {
   WireConnection,
   createWebhookChannelHandler,
   createLogger,
+  importKeyPair,
   setPlan,
   type DeliveryPayload,
   type KeyPair,
@@ -249,13 +250,7 @@ async function main(): Promise<void> {
     log.error({ event: "no_private_key" }, "no WIRE_PRIVATE_KEY or CREW_PRIVATE_KEY — exiting");
     process.exit(1);
   } else {
-    const pkcs8 = Uint8Array.from(atob(rawKey), (c) => c.charCodeAt(0));
-    const privateKey = await crypto.subtle.importKey("pkcs8", pkcs8, "Ed25519", true, ["sign"]);
-    const jwk = await crypto.subtle.exportKey("jwk", privateKey);
-    const pubB64Url = jwk.x!;
-    const pubB64 = pubB64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const publicKey = pubB64 + "=".repeat((4 - (pubB64.length % 4)) % 4);
-    keyPair = { publicKey, privateKey };
+    keyPair = await importKeyPair(rawKey);
   }
 
   // Connect MCP first so notifications work when SSE backlog arrives

@@ -9,7 +9,7 @@
 
 import { readFileSync, readdirSync, unlinkSync } from "fs";
 import { join } from "path";
-import { createAuthJwt } from "@agiterra/wire-tools/crypto";
+import { createAuthJwt, importPrivateKey } from "@agiterra/wire-tools/crypto";
 
 const agentId = process.env.WIRE_AGENT_ID;
 if (!agentId) {
@@ -23,8 +23,7 @@ if (!rawKey) {
   process.exit(0);
 }
 
-const pkcs8 = Uint8Array.from(atob(rawKey), (c) => c.charCodeAt(0));
-const privateKey = await crypto.subtle.importKey("pkcs8", pkcs8, "Ed25519", true, ["sign"]);
+const privateKey = await importPrivateKey(rawKey);
 
 const sessionDir = join(process.env.HOME ?? "/tmp", ".wire", "sessions");
 
