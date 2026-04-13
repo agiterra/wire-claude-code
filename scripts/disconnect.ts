@@ -4,16 +4,16 @@
  * Called by SessionEnd hook — reads the session file written by the MCP server
  * and disconnects only that specific session.
  *
- * Env: WIRE_AGENT_ID, WIRE_PRIVATE_KEY (or CREW_PRIVATE_KEY)
+ * Env: AGENT_ID, WIRE_PRIVATE_KEY (or CREW_PRIVATE_KEY)
  */
 
 import { readFileSync, readdirSync, unlinkSync } from "fs";
 import { join } from "path";
 import { createAuthJwt, importPrivateKey } from "@agiterra/wire-tools/crypto";
 
-const agentId = process.env.WIRE_AGENT_ID;
+const agentId = process.env.AGENT_ID;
 if (!agentId) {
-  console.error("[wire] disconnect: no WIRE_AGENT_ID set");
+  console.error("[wire] disconnect: no AGENT_ID set");
   process.exit(0);
 }
 
