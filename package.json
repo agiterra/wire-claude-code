@@ -1,6 +1,6 @@
 {
   "name": "@agiterra/wire-claude-code",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "license": "Apache-2.0",
   "type": "module",
   "bin": "./server.ts",
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@agiterra/mcp-tee": "agiterra/mcp-tee#v0.1.0",
-    "@agiterra/wire-tools": "agiterra/wire-tools#v2.10.0",
+    "@agiterra/wire-tools": "agiterra/wire-tools#v2.11.0",
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
