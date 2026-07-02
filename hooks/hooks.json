@@ -8,6 +8,16 @@
             "command": "echo \"export CLAUDE_CODE_SESSION_ID=$CLAUDE_CODE_SESSION_ID\" >> \"$CLAUDE_ENV_FILE\""
           }
         ]
+      },
+      {
+        "matcher": "compact|resume|startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/reconnect-watchdog.ts\"",
+            "timeout": 8000
+          }
+        ]
       }
     ],
     "SessionEnd": [
