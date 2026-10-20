@@ -1,0 +1,10 @@
+# mcp-tee env allowlist — wire plugin (wire 2.13.0 + @agiterra/wire-tools v2.24.1). Re-checked in-repo 2026-10-20.
+# Base set (PATH HOME USER LOGNAME SHELL LANG LC_* TERM TMPDIR TZ) is implicit.
+# ENG-5158. Built from a static read of server.ts + node_modules/@agiterra/*
+# (tests excluded) on 2026-10-20, re-checked with grep -R. The server spawns no subprocesses.
+AGENT_*                  # AGENT_ID AGENT_NAME AGENT_PLAN AGENT_PRIVATE_KEY (signing)
+WIRE_*                   # WIRE_URL WIRE_MCP_INBOUND WIRE_SCREEN_NAME WIRE_SSH_HOST WIRE_RUN_AS_UID WIRE_HEALTH_INTERVAL_MS
+STE_*                    # STE_GLOSSARY_PATH STE_RULES_PATH (ste-lint in newer wire-tools)
+CLAUDE_CODE_SESSION_ID   # session binding; random UUID if absent (would break session identity)
+STY                      # screen name self-report (deriveScreenName)
+GROK_WIRE_BRIDGE         # inbound mode: =1 means a sidecar owns the stream

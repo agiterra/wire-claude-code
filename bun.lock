@@ -5,7 +5,7 @@
     "": {
       "name": "@agiterra/wire-claude-code",
       "dependencies": {
-        "@agiterra/mcp-tee": "agiterra/mcp-tee#v0.1.0",
+        "@agiterra/mcp-tee": "agiterra/mcp-tee#v0.3.0",
         "@agiterra/wire-tools": "agiterra/wire-tools#v2.24.1",
         "@modelcontextprotocol/sdk": "^1.0.0",
       },
@@ -15,7 +15,7 @@
     },
   },
   "packages": {
-    "@agiterra/mcp-tee": ["@agiterra/mcp-tee@github:agiterra/mcp-tee#ecdf634", { "bin": { "mcp-tee": "./bin/mcp-tee.sh" } }, "agiterra-mcp-tee-ecdf634", "sha512-JWjvscg2DDNrBidXKPTveVQQmTI2iWC3KnsexKy45ZiahQNyo0tbQXkCn/r1FQrt4OPO9na8capDbc7GdF/bRw=="],
+    "@agiterra/mcp-tee": ["@agiterra/mcp-tee@github:agiterra/mcp-tee#4cec508", { "bin": { "mcp-tee": "./bin/mcp-tee.sh" } }, "agiterra-mcp-tee-4cec508", "sha512-OmLl0eVP5M/fOx0FUPhLiN2E8vr8Rue8hVd/VjkTY/W94XQSJXP3CAdlr5qpIXlWT/0t7DgIA2ghEZkROqYhWA=="],
 
     "@agiterra/wire-tools": ["@agiterra/wire-tools@github:agiterra/wire-tools#1e65489", { "dependencies": { "@modelcontextprotocol/sdk": "^1.29.0", "pino": "^10.3.1" } }, "agiterra-wire-tools-1e65489", "sha512-8WOixJu67smmJ7eU0f4lL553gTU81S0x8JxklgrKb7xZSnpTGDVtdr4Z8Gw5MM8J8VUr6ghYbRKn/XCUQAXAJg=="],
 
